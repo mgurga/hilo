@@ -6,3 +6,4 @@ public//package
 public/.env
 public/.env.*
 public/!.env.example
+sessions.db
