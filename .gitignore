@@ -1,0 +1,8 @@
+public/.DS_Store
+public/node_modules
+public//build
+public//.svelte-kit
+public//package
+public/.env
+public/.env.*
+public/!.env.example
