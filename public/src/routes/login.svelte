@@ -1,17 +1,16 @@
 <script lang="ts">
+    import Tab, { Label } from '@smui/tab';
+    import TabBar from '@smui/tab-bar';
     import Nav from "../components/Nav.svelte";
     import { username, key, server_url } from '../stores.js';
     import { onMount } from 'svelte';
+    import Button from '@smui/button';
 
     // console.log("server url: " + $server_url);
-    enum Menu {
-        Register,
-        Login
-    }
-    
-    let cur: Menu = Menu.Login;
+
     let error = "";
     let success = "";
+    let active = "Login";
 
     onMount(() => {
         const url = window.location.href
@@ -43,24 +42,30 @@
     });
 </script>
 
-<title>Login</title>
+<title>{active == "Login" ? "Login" : "Register"}</title>
 <Nav />
 <main>
     <div id="menu">
-        <button on:click={() => cur = Menu.Login} style="width: 48%">Login</button>
-        <button on:click={() => cur = Menu.Register} style="width: 48%">Register</button>
-        <form action="{$server_url}/api/{cur == Menu.Login ? "signin" : "register"}">
-            <h2 style="width: auto; text-align: center;">{cur == Menu.Login ? "Login" : "Register"}</h2>
+        <TabBar tabs={['Login', 'Register']} let:tab bind:active>
+            <Tab {tab}>
+                <Label>{tab}</Label>
+            </Tab>
+        </TabBar>
+
+        <form action="{$server_url}/api/{active == "Login" ? "signin" : "register"}">
+            <!-- <h2 style="width: auto; text-align: center;">{active == "Login" ? "Login" : "Register"}</h2> -->
+            <br>
             <p>Username</p>
             <input type="text" name="user">
-            <br>
             <br>
             <p>Password</p>
             <input type="password" name="pass">
             <br>
-            <br>
-            <button type="submit">Submit</button>
+            <Button style="margin: 0 auto; display: block;" type="submit">Submit</Button>
         </form>
+        <!-- <button on:click={() => cur = Menu.Login} style="width: 48%">Login</button>
+        <button on:click={() => cur = Menu.Register} style="width: 48%">Register</button> -->
+        
         <p style="color: red;">{error}</p>
         <p style="color: green;">{success}</p>
     </div>
@@ -81,6 +86,13 @@
     p {
         margin: 0;
         color: rgb(43, 43, 43);
+        width: 100%;
+        text-align: center;
+    }
+
+    input {
+        margin: 0 auto;
+        display: block;
     }
 
     #menu {

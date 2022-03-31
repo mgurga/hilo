@@ -3,9 +3,10 @@
     import Nav from "../../components/Nav.svelte";
     import { page } from '$app/stores';
     import { onMount } from 'svelte';
-    import Dialog, { Title, Content, Actions } from "@smui/dialog";
+    import Dialog, { Title, Actions } from "@smui/dialog";
     import Button, { Label } from '@smui/button';
     import Textfield from '@smui/textfield';
+    import CircularProgress from '@smui/circular-progress';
     // console.log("editing: " + $page.params.id)
 
     type Game = {
@@ -66,11 +67,17 @@
     <div id="menu">
         <div id="gamebanner">
             {#if gameinfo == null}
-            <p>loading</p>
+            <div style="display: flex; justify-content: center">
+                <CircularProgress style="height: 32px; width: 32px;" indeterminate />
+            </div>
             {:else}
             <h1 on:click={changename} class="gameinfotext">{gameinfo.name}</h1>
             <br>
+            <br>
             <p on:click={changename} class="gameinfotext">{gameinfo.description}</p>
+            <div style="float: right; display: inline;">
+                <p>created by: {gameinfo.creator}</p>
+            </div>
             {/if}
         </div>
     </div>
@@ -81,7 +88,8 @@
     aria-describedby="simple-content">
     <Title id="simple-title">Rename</Title>
     <Textfield bind:value={newName} label="Name" />
-    <Textfield bind:value={newDesc} label="Description" />
+    <br>
+    <Textfield textarea bind:value={newDesc} label="Description" />
     <Actions>
         <Button on:click={savename}>
         <Label>Save</Label>
@@ -94,13 +102,17 @@
         margin: 0;
         cursor: pointer;
         user-select: none;
+        width: fit-content;
+        display: inline-block;
     }
 
     #gamebanner {
-        background-color: blue;
-        color: white;
+        background-color: white;
+        color: black;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         padding: 10px 10px 15px 10px;
+        border-radius: 5px;
+        border: 1px solid black;
     }
 
     main {

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import Button, { Label } from '@smui/button';
     import { username, key, server_url } from '../stores.js';
     import Nav from "../components/Nav.svelte";
     import { onMount } from 'svelte';
@@ -45,7 +46,7 @@
     <div id="menu">
         <div id="gamesheader">
             <h2 class="header">My Games</h2>
-            <div style="float: right;">
+            <div style="float: right; ">
                 <div on:click={createGame} id="creategame">+</div>
             </div>
         </div>
@@ -53,18 +54,14 @@
             {#each usergames as g, i}
             <div class="gamecard">
                 <div style="width: fit-content; display: inline-block;">
-                    <h3 class="gamecardinfo">{g.name}</h3>
+                    <h2 class="gamecardinfo">{g.name}</h2>
                     <br>
                     <br>
                     <p class="gamecardinfo">{g.description}</p>
                 </div>
-                <div style="float: right;">
-                    <a style="text-decoration: none;" href="/editor/{g.id}">
-                        <div class="divbutton" style="background-color: greenyellow;">Edit</div>
-                    </a>
-                    <a style="text-decoration: none;" href="/mygames" on:click={() => {deleteGame(g.id, i)}}>
-                        <div class="divbutton" style="background-color: red;">Delete</div>
-                    </a>
+                <div style="display: block;">
+                    <Button style="float: right;" on:click={() => {deleteGame(g.id, i)}}>Delete</Button>
+                    <Button style="float: right;" on:click={() => {window.location.href = `/editor/${g.id}`}}>Edit</Button>
                 </div>
             </div>
             {/each}

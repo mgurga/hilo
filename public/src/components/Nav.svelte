@@ -1,6 +1,7 @@
 <script lang="ts">
     import { username, key } from '../stores.js';
     import Logout from 'svelte-material-icons/Logout.svelte';
+    import IconButton from '@smui/icon-button';
 
     function logout() {
         $username = "";
@@ -16,11 +17,7 @@
         {:else}
         <a href="/mygames"><span>My Games</span></a>
         <span style="padding-right: 0px">Welcome, {$username}</span>
-        <a on:click={logout} href="/login">
-            <span style="padding: 2px; height: 100%;">
-                <Logout color="white" height="90%"/>
-            </span>
-        </a>
+        <IconButton style="padding: 0" size="button" class="material-icons" on:click={logout}>logout</IconButton>
         {/if}
     </div>
 </nav>

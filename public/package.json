@@ -6,13 +6,19 @@
     "build": "svelte-kit build",
     "package": "svelte-kit package",
     "preview": "svelte-kit preview",
-    "prepare": "svelte-kit sync",
+    "prepare": "npm run smui-theme && svelte-kit sync",
     "check": "svelte-check --tsconfig ./tsconfig.json",
-    "check:watch": "svelte-check --tsconfig ./tsconfig.json --watch"
+    "check:watch": "svelte-check --tsconfig ./tsconfig.json --watch",
+    "smui-theme": "smui-theme compile static/smui.css -i src/theme"
   },
   "devDependencies": {
     "@smui/button": "^6.0.0-beta.15",
+    "@smui/card": "^6.0.0-beta.15",
+    "@smui/circular-progress": "^6.0.0-beta.15",
     "@smui/dialog": "^6.0.0-beta.15",
+    "@smui/icon-button": "^6.0.0-beta.15",
+    "@smui/tab": "^6.0.0-beta.15",
+    "@smui/tab-bar": "^6.0.0-beta.15",
     "@smui/textfield": "^6.0.0-beta.15",
     "@sveltejs/adapter-auto": "next",
     "@sveltejs/kit": "next",
