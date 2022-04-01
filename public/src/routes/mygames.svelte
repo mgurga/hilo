@@ -1,5 +1,7 @@
 <script lang="ts">
-    import Button, { Label } from '@smui/button';
+    import Button from '@smui/button';
+    import CircularProgress from '@smui/circular-progress';
+    import Fab, { Icon } from '@smui/fab';
     import { username, key, server_url } from '../stores.js';
     import Nav from "../components/Nav.svelte";
     import { onMount } from 'svelte';
@@ -12,7 +14,7 @@
         datecreated: number;
     }
 
-    let usergames: Array<Game> = [];
+    let usergames: Array<Game> = null;
 
     onMount(() => {
         if ($username == "" || $key == "") {
@@ -20,7 +22,7 @@
             window.location.href = "/login";
         }
 
-        fetch(`${$server_url}/api/usergames/${$username}`, {"method": "GET"})
+        fetch(`${$server_url}/api/${$username}/games`, {"method": "GET"})
         .then((response) => response.json())
         .then((data) => {
             usergames = data;
@@ -28,7 +30,7 @@
     })
 
     function createGame() {
-        fetch(`${$server_url}/api/creategame`, {"method": "GET", "headers" : { "authkey": $key }})
+        fetch(`${$server_url}/api/games/create`, {"method": "GET", "headers" : { "authkey": $key }})
         .then((response) => response.json())
         .then((data) => {
             usergames = [...usergames, data]
@@ -36,8 +38,8 @@
     }
 
     function deleteGame(id: string, index: number) {
+        fetch(`${$server_url}/api/games/delete`, {"method": "GET", "headers" : { "authkey": $key, "id": id }})
         usergames = [...usergames.slice(0, index), ...usergames.slice(index + 1)];
-        fetch(`${$server_url}/api/deletegame`, {"method": "GET", "headers" : { "authkey": $key, "id": id }})
     }
 </script>
 
@@ -46,11 +48,14 @@
     <div id="menu">
         <div id="gamesheader">
             <h2 class="header">My Games</h2>
-            <div style="float: right; ">
-                <div on:click={createGame} id="creategame">+</div>
+            <div style="float: right;">
+                <Fab color="primary" on:click={createGame} mini>
+                    <Icon class="material-icons">add</Icon>
+                </Fab>
             </div>
         </div>
         <div id="usergames">
+            {#if usergames != null}
             {#each usergames as g, i}
             <div class="gamecard">
                 <div style="width: fit-content; display: inline-block;">
@@ -65,6 +70,11 @@
                 </div>
             </div>
             {/each}
+            {:else}
+            <div style="display: flex; justify-content: center; padding-top: 20px">
+                <CircularProgress style="height: 40px; width: 40px;" indeterminate />
+            </div>
+            {/if}
         </div>
     </div>
 </main>
@@ -89,15 +99,6 @@
         border-top: 0;
     }
 
-    .divbutton {
-        padding-left: 10px;
-        padding-right: 10px;
-        margin: 5px;
-        cursor: pointer;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        color: black;
-    }
-
     #gamesheader {
         border-bottom: 2px solid black;
         padding: 0 10px 20px 10px;
@@ -111,21 +112,11 @@
         font-size: 30px;
     }
 
-    #creategame {
-        background-color: green;
-        font-size: 30px;
-        font-weight: bolder;
-        padding-left: 10px;
-        padding-right: 10px;
-        margin: 5px;
-        cursor: pointer;
-    }
-
     main {
         display: flex;
         justify-content: center;
         /* align-items: center; */
-        height: 95%; /* minus 5% to account for Nav bar */
+        height: calc(100% - 64px) /* minus 5% to account for Nav bar */
     }
 
     #menu {

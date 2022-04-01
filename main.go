@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -18,6 +19,7 @@ import (
 var boltdb *bolt.DB
 var accountdb *column.Collection
 var gamesdb *column.Collection
+var gamenodesdb *column.Collection
 
 func main() {
 	boltdb, _ = bolt.Open("sessions.db", 0600, nil)
@@ -39,32 +41,184 @@ func main() {
 	gamesdb.CreateColumn("description", column.ForString())
 	gamesdb.CreateColumn("datecreated", column.ForInt64())
 
+	gamenodesdb = column.NewCollection()
+	gamenodesdb.CreateColumn("name", column.ForString())
+	gamenodesdb.CreateColumn("amount", column.ForInt64())
+	gamenodesdb.CreateColumn("id", column.ForString())
+	gamenodesdb.CreateColumn("parent", column.ForString()) // game id
+	gamenodesdb.CreateColumn("datecreated", column.ForInt64())
+
 	r := chi.NewRouter()
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins: []string{"*"},
-		AllowedHeaders: []string{"authkey", "id", "name", "desc"},
+		AllowedHeaders: []string{"authkey", "id", "name", "desc", "amount", "parent"},
 	}))
 	r.Use(middleware.Logger)
 	r.Use(putConversion)
 
-	r.Route("/admin", func(r chi.Router) {
-		r.Get("/games", listgames)
-		r.Get("/users", listusers)
-		r.Get("/keyring", listauths)
+	r.Route("/list", func(r chi.Router) {
+		r.Get("/games", listgames) // returns list of games
+		r.Get("/users", listusers) // returns list of users
+		r.Get("/nodes", listnodes) // returns list of users
+		//r.Get("/keyring", listauths) // returns list of valid authkeys (hide this in prod)
 	})
 	r.Route("/api", func(r chi.Router) {
-		r.Get("/signin", signin)
-		r.Get("/authkey/{hash}/{user}", getauthkey)
-		r.Get("/register", register)
-		r.Get("/creategame", creategame)
-		r.Get("/deletegame", deletegame)
-		r.Get("/usergames/{user}", usergames)
-		r.Get("/game/{id}", gameid)
-		r.Post("/setnamedesc", setnamedesc)
+		r.Get("/signin", signin)                    // returns redirect (probably change to a Post)
+		r.Get("/authkey/{hash}/{user}", getauthkey) // returns an authkey after registering
+		r.Get("/register", register)                // returns redirect (probably change to a Post)
+		r.Get("/games/create", creategame)          // returns game id
+		r.Post("/games/delete", deletegame)
+		r.Get("/{user}/games", usergames)      // returns all games a user has made
+		r.Get("/game/{id}/info", gameid)       // returns game json data
+		r.Get("/game/{id}/nodes", gamenodesid) // returns game json data
+		r.Post("/games/info", setnamedesc)
+		r.Get("/nodes/create", createnode) // returns node id
+		r.Post("/nodes/delete", deletenode)
+		r.Post("/nodes/edit", editnode)
 	})
 
 	println("started chi api on :8000")
 	http.ListenAndServe(":8000", r)
+}
+
+func gamenodesid(w http.ResponseWriter, r *http.Request) {
+	var id = chi.URLParam(r, "id")
+	var out = "["
+
+	gamenodesdb.Query(func(txn *column.Txn) error {
+		txn.WithValue("parent", func(v interface{}) bool { return v == id }).Range(func(i uint32) {
+			name, _ := txn.String("name").Get()
+			amount, _ := txn.Int64("amount").Get()
+			id, _ := txn.String("id").Get()
+			parent, _ := txn.String("parent").Get()
+			created, _ := txn.Int64("datecreated").Get()
+
+			out += `{
+	"name": "` + name + `",
+	"amount": ` + fmt.Sprint(amount) + `,
+	"id": "` + id + `",
+	"parent": "` + parent + `",
+	"datecreated": ` + fmt.Sprint(created) + `
+},`
+		})
+		return nil
+	})
+	if out[len(out)-1] == byte(',') {
+		out = out[0 : len(out)-1]
+	}
+	out += "]"
+	w.Write([]byte(out))
+}
+
+func editnode(w http.ResponseWriter, r *http.Request) {
+	var authkey = r.Header.Get("authkey")
+	var parent = r.Header.Get("parent")
+	var nid = r.Header.Get("id")
+	var name = r.Header.Get("name")
+	var amount = r.Header.Get("amount")
+
+	var creator = validauth(authkey)
+	if creator == "" {
+		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+		w.Write([]byte(`invalid authkey`))
+		return
+	}
+
+	var owner = false
+	gamesdb.Query(func(txn *column.Txn) error {
+		txn.WithValue("id", func(v interface{}) bool { return v == parent }).Range(func(i uint32) {
+			creatorval, _ := txn.String("creator").Get()
+			owner = creatorval == creator
+		})
+		return nil
+	})
+	if owner == false {
+		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+		return
+	}
+
+	gamenodesdb.Query(func(txn *column.Txn) error {
+		txn.WithValue("id", func(v interface{}) bool { return v == nid }).Range(func(i uint32) {
+			amt, _ := strconv.Atoi(amount)
+			txn.String("name").Set(name)
+			txn.Int64("amount").Set(int64(amt))
+		})
+		return nil
+	})
+}
+
+func createnode(w http.ResponseWriter, r *http.Request) {
+	var authkey = r.Header.Get("authkey")
+	var name = r.Header.Get("name")
+	var amount, _ = strconv.Atoi(r.Header.Get("amount"))
+	var parent = r.Header.Get("parent")
+
+	var creator = validauth(authkey)
+	if creator == "" {
+		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+		w.Write([]byte(`invalid authkey`))
+		return
+	}
+
+	var gid = genid()
+	gamenodesdb.InsertObject(map[string]interface{}{
+		"name":        name,
+		"amount":      amount,
+		"id":          gid,
+		"parent":      parent,
+		"datecreated": time.Now().Unix(),
+	})
+
+	w.Write([]byte(gid))
+}
+
+func listnodes(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Total of " + fmt.Sprint(gamenodesdb.Count()) + " elements\n"))
+	gamenodesdb.Query(func(txn *column.Txn) error {
+		txn.With("id").Range(func(i uint32) {
+			name, _ := txn.String("name").Get()
+			amount, _ := txn.Int64("amount").Get()
+			id, _ := txn.String("id").Get()
+			parent, _ := txn.String("parent").Get()
+			created, _ := txn.Int64("datecreated").Get()
+
+			w.Write([]byte(fmt.Sprintf("name: '%s' amount:'%d' id:'%s' parent: '%s' created: '%d'\n", name, amount, id, parent, created)))
+		})
+
+		return nil
+	})
+}
+
+func deletenode(w http.ResponseWriter, r *http.Request) {
+	var authkey = r.Header.Get("authkey")
+	var nid = r.Header.Get("id")
+	var parent = r.Header.Get("parent")
+
+	var creator = validauth(authkey)
+	if creator == "" {
+		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+		return
+	}
+
+	var owner = false
+	gamesdb.Query(func(txn *column.Txn) error {
+		txn.WithValue("id", func(v interface{}) bool { return v == parent }).Range(func(i uint32) {
+			creatorval, _ := txn.String("creator").Get()
+			owner = creatorval == creator
+		})
+		return nil
+	})
+	if owner == false {
+		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+		return
+	}
+
+	gamenodesdb.Query(func(txn *column.Txn) error {
+		txn.WithValue("id", func(v interface{}) bool { return v == nid }).Range(func(i uint32) {
+			fmt.Printf("deleted game node num: %v\n", txn.DeleteAt(i))
+		})
+		return nil
+	})
 }
 
 func setnamedesc(w http.ResponseWriter, r *http.Request) {
@@ -95,6 +249,7 @@ func setnamedesc(w http.ResponseWriter, r *http.Request) {
 
 func gameid(w http.ResponseWriter, r *http.Request) {
 	var id = chi.URLParam(r, "id")
+	var found = false
 	gamesdb.Query(func(txn *column.Txn) error {
 		txn.WithValue("id", func(v interface{}) bool { return v == id }).Range(func(i uint32) {
 			creatorval, _ := txn.String("creator").Get()
@@ -110,10 +265,14 @@ func gameid(w http.ResponseWriter, r *http.Request) {
 	"description": "` + descval + `",
 	"datecreated": ` + fmt.Sprint(dateval) + `
 }`))
+			found = true
 		})
 
 		return nil
 	})
+	if !found {
+		w.Write([]byte(`{"error": "invalid game"}`))
+	}
 }
 
 func usergames(w http.ResponseWriter, r *http.Request) {
@@ -156,15 +315,13 @@ func listusers(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Total of " + fmt.Sprint(accountdb.Count()) + " elements\n"))
 	accountdb.Query(func(txn *column.Txn) error {
 		usercol := txn.String("username")
-		passcol := txn.String("password")
 		datecol := txn.Int64("datecreated")
 
 		txn.With("username").Range(func(i uint32) {
 			userval, _ := usercol.Get()
-			passval, _ := passcol.Get()
 			dateval, _ := datecol.Get()
 
-			w.Write([]byte(fmt.Sprintf("username: '%s' password:'*' dateval:'%d'\n", userval, passval, dateval)))
+			w.Write([]byte(fmt.Sprintf("username: '%s' password:'*' dateval:'%d'\n", userval, dateval)))
 		})
 
 		return nil
@@ -185,14 +342,10 @@ func listauths(w http.ResponseWriter, r *http.Request) {
 func listgames(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Total of " + fmt.Sprint(gamesdb.Count()) + " elements\n"))
 	gamesdb.Query(func(txn *column.Txn) error {
-		creatorcol := txn.String("creator")
-		namecol := txn.String("name")
-		idcol := txn.String("id")
-
 		txn.With("creator").Range(func(i uint32) {
-			creatorval, _ := creatorcol.Get()
-			nameval, _ := namecol.Get()
-			idval, _ := idcol.Get()
+			creatorval, _ := txn.String("creator").Get()
+			nameval, _ := txn.String("name").Get()
+			idval, _ := txn.String("id").Get()
 
 			w.Write([]byte(fmt.Sprintf("creator: '%s' name:'%s' id:'%s'\n", creatorval, nameval, idval)))
 		})
@@ -212,12 +365,9 @@ func deletegame(w http.ResponseWriter, r *http.Request) {
 	}
 
 	gamesdb.Query(func(txn *column.Txn) error {
-		creatorcol := txn.String("creator")
-		idcol := txn.String("id")
-
 		txn.WithValue("creator", func(v interface{}) bool { return v == creator }).Range(func(i uint32) {
-			creatorval, _ := creatorcol.Get()
-			idval, _ := idcol.Get()
+			creatorval, _ := txn.String("creator").Get()
+			idval, _ := txn.String("id").Get()
 
 			if creatorval == creator && idval == id {
 				fmt.Printf("deleted game index num: %v\n", txn.DeleteAt(i))
@@ -287,12 +437,9 @@ func signin(w http.ResponseWriter, r *http.Request) {
 	var exists bool = false
 
 	accountdb.Query(func(txn *column.Txn) error {
-		user := txn.String("username")
-		pass := txn.String("password")
-
 		txn.With("username").Range(func(i uint32) {
-			userval, _ := user.Get()
-			passval, _ := pass.Get()
+			userval, _ := txn.String("username").Get()
+			passval, _ := txn.String("password").Get()
 
 			if userval == r.FormValue("user") && passval == r.FormValue("pass") {
 				exists = true
@@ -338,7 +485,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 }
 
 func createhash(user string) string {
-	var hash = randomString(20)
+	var hash = genid()
 	boltdb.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("hashes"))
 		err := b.Put([]byte(hash), []byte(user))
@@ -351,7 +498,7 @@ func createhash(user string) string {
 }
 
 func createauthkey(user string) string {
-	var key = randomString(20)
+	var key = genid()
 	boltdb.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("authkey"))
 		b.Put([]byte(key), []byte(user))
@@ -371,9 +518,9 @@ func validauth(authkey string) string {
 }
 
 func genid() string {
-	var val string = randomString(10)
+	var val string = randomString(20)
 	for idused(val) {
-		val = randomString(10)
+		val = randomString(20)
 	}
 	return val
 }
@@ -381,16 +528,48 @@ func genid() string {
 func idused(id string) bool {
 	var exists bool = false
 	gamesdb.Query(func(txn *column.Txn) error {
-		ids := txn.String("id")
-
 		txn.With("id").Range(func(i uint32) {
-			gid, _ := ids.Get()
-
+			gid, _ := txn.String("id").Get()
 			if gid == id {
 				exists = true
 			}
 		})
 
+		return nil
+	})
+	if exists {
+		return true
+	}
+	gamenodesdb.Query(func(txn *column.Txn) error {
+		txn.With("id").Range(func(i uint32) {
+			gid, _ := txn.String("id").Get()
+			if gid == id {
+				exists = true
+			}
+		})
+
+		return nil
+	})
+	if exists {
+		return true
+	}
+	boltdb.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte("authkey"))
+		out := b.Get([]byte(id))
+		if out != nil {
+			exists = true
+		}
+		return nil
+	})
+	if exists {
+		return true
+	}
+	boltdb.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte("hashes"))
+		out := b.Get([]byte(id))
+		if out != nil {
+			exists = true
+		}
 		return nil
 	})
 	return exists

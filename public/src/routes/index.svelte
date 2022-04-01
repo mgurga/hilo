@@ -16,7 +16,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 95%; /* minus 5% to account for Nav bar */
+        height: calc(100% - 64px); /* minus 5% to account for Nav bar */
     }
 
     #menu {

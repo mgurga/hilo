@@ -63,9 +63,7 @@
             <br>
             <Button style="margin: 0 auto; display: block;" type="submit">Submit</Button>
         </form>
-        <!-- <button on:click={() => cur = Menu.Login} style="width: 48%">Login</button>
-        <button on:click={() => cur = Menu.Register} style="width: 48%">Register</button> -->
-        
+
         <p style="color: red;">{error}</p>
         <p style="color: green;">{success}</p>
     </div>
@@ -76,11 +74,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 95%; /* minus 5% to account for Nav bar */
-    }
-
-    h2, p {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        height: calc(100% - 64px);
     }
 
     p {
