@@ -38,7 +38,7 @@
     }
 
     function deleteGame(id: string, index: number) {
-        fetch(`${$server_url}/api/games/delete`, {"method": "GET", "headers" : { "authkey": $key, "id": id }})
+        fetch(`${$server_url}/api/games/delete`, {"method": "POST", "headers" : { "authkey": $key, "id": id }})
         usergames = [...usergames.slice(0, index), ...usergames.slice(index + 1)];
     }
 </script>

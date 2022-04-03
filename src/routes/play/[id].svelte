@@ -1,5 +1,5 @@
 <script lang="ts">
-    import Dialog, { Title, Actions } from "@smui/dialog";
+    import Dialog, { Title, Content, Actions } from "@smui/dialog";
     import { tweened } from 'svelte/motion';
     import { fade, fly } from 'svelte/transition';
     import Button, { Label } from '@smui/button';
@@ -28,6 +28,8 @@
     let gamenodes: Array<GameNode> = [];
     let leftitem: GameNode = null;
     let rightitem: GameNode  = null;
+    let nodelist: Array<GameNode>;
+    let curnode: number = 0;
     let buttonsvisible = true;
     let showamounts = false;
     let outcome: boolean = null;
@@ -35,6 +37,8 @@
     let score = 0;
     let progress = 0;
     let colors = ["darkblue", "rgb(0, 0, 90)"];
+    let mandatorydialog = false;
+    let infodialog = false;
 
     onMount(() => {
         fetch(`${$server_url}/api/game/${$page.params.id}/info`, {"method": "GET"})
@@ -50,8 +54,25 @@
         .then((response) => response.json())
         .then((data) => {
             gamenodes = data;
-            leftitem = randomnode();
-            rightitem = randomnode();
+
+            if (gamenodes.length >= 3) {
+                nodelist = [gamenodes[(Math.random() * gamenodes.length) | 0]];
+                let newitem = gamenodes[(Math.random() * gamenodes.length) | 0];
+                for (var i = 0; i < 1000; i++) {
+                    while (newitem.id == nodelist[nodelist.length - 1].id) {
+                        newitem = gamenodes[(Math.random() * gamenodes.length) | 0];
+                    }
+                    nodelist = [...nodelist, newitem]
+                }
+
+                leftitem = nodelist[0];
+                rightitem = nodelist[1];
+                curnode = 2;
+                infodialog = true;
+            } else {
+                mandatorydialog = true;
+                buttonsvisible = false;
+            }
         })
     })
 
@@ -96,39 +117,40 @@
     }
 
     function quickswitch() {
-        leftitem.amount = rightitem.amount;
-        leftitem.name = rightitem.name;
-        leftitem.id = rightitem.id
-        let newitem = randomnode();
-        rightitem.amount = newitem.amount;
-        rightitem.name = newitem.name;
-        rightitem.id = rightitem.id;
+        leftitem.amount = nodelist[curnode - 1].amount;
+        leftitem.name = nodelist[curnode - 1].name;
+        leftitem.id = nodelist[curnode - 1].id;
+        rightitem.amount = nodelist[curnode].amount;
+        rightitem.name = nodelist[curnode].name;
+        rightitem.id = nodelist[curnode].id;
+        curnode++;
 
         colors = [colors[1], colors[0]]
         progress = 0
         showamounts = false;
         buttonsvisible = true;
     }
-
-    function randomnode(): GameNode {
-        console.log(leftitem);
-        if (leftitem == null)
-            return gamenodes[(Math.random() * gamenodes.length) | 0];
-
-        let out = gamenodes[(Math.random() * gamenodes.length) | 0];
-        if (out.id == leftitem.id) {
-            return randomnode()
-        }
-
-        return out;
-    }
-
 </script>
+<Dialog
+    bind:open={mandatorydialog}
+    scrimClickAction=""
+    escapeKeyAction="">
+    <Title id="mandatory-title">Error</Title>
+    <Content id="mandatory-content">The game does not have enough items to play.</Content>
+</Dialog>
+<Dialog
+    bind:open={infodialog}>
+    <Title>{gameinfo == null ? "" : gameinfo.name} by {gameinfo == null ? "" : gameinfo.creator}</Title>
+    <Content>{gameinfo == null ? "" : gameinfo.description}</Content>
+    <Actions>
+        <Button on:click={() => (infodialog = false)}><Label>Play</Label></Button>
+    </Actions>
+</Dialog>
 
 <title>HiLo</title>
 <main style="background-color: {colors[0]}">
     <div id="left" style="background-color: {colors[0]}">
-        <h1>{leftitem == null ? "Left Item" : leftitem.name}</h1>
+        <h1>{leftitem == null ? "" : leftitem.name}</h1>
         {#if leftitem != null}
         <div class="amounts" transition:fade>
             <CountUp bind:num={leftitem.amount} inc={false}/>
@@ -136,7 +158,7 @@
         {/if}
     </div>
     <div id="right" style="transform: translateX(-{progress}%); background-color: {colors[1]};">
-        <h1>{rightitem == null ? "Right Item" : rightitem.name}</h1>
+        <h1>{rightitem == null ? "" : rightitem.name}</h1>
         {#if buttonsvisible}
         <div id="buttons" style="display: grid;" transition:fade>
             <Button variant="raised" style="background-color: green; margin-bottom: 10px" on:click={() => {decisionpressed("higher")}}>

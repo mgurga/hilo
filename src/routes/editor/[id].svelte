@@ -96,7 +96,7 @@
             {"method": "GET", "headers" : { "authkey": $key, "name": newgn.name, "amount": newgn.amount.toString(), "parent": newgn.parent }})
         .then((response) => response.text())
         .then((data) => {
-            if (data == "invalid authkey") {
+            if (data == "") {
                 verifylogin();
             }
             newgn.id = data;

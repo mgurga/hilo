@@ -34,7 +34,7 @@
                         // console.log(data);
                         window.history.pushState({}, document.title, "/" + "login");
                     }
-                    if (data == "")
+                    if (data == "invalid hash")
                         alert("invalid hash, try signing in again")
                 })
             }

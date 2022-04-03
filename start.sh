@@ -1,3 +1,3 @@
-cd public
-npm run dev &
-go run ../main.go
+npm i
+npm run prepare
+npm run dev
