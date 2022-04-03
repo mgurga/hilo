@@ -1,7 +1,7 @@
 import { writable } from 'svelte/store';
 import { browser } from "$app/env";
 
-export const server_url = writable("http://hiloserver.pythonanywhere.com/");
+export const server_url = writable("http://hiloserver.pythonanywhere.com");
 
 export let username = writable("");
 export let key = writable("");
