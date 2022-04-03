@@ -7,14 +7,27 @@
     export let inc: boolean = true;
 
     function increment() {
-        setTimeout(function() {
-            if (num != target && inc) {
-                num = num + 1;
-                increment();
-            } else {
-                dispatch("finished")
-            }
-        }, 2000/target);
+        if (inc) {
+            const animationDuration = 2000;
+            const frameDuration = 1000 / 60;
+            const totalFrames = Math.round( animationDuration / frameDuration );
+
+            let frame = 0;
+            const easeOutQuad = t => t * ( 2 - t );
+            const counter = setInterval(() => {
+                frame++;
+                const progress = easeOutQuad( frame / totalFrames );
+                const currentCount = Math.round( target * progress );
+
+                num = currentCount;
+
+                // If we’ve reached our last frame, stop the animation
+                if ( frame === totalFrames ) {
+                    clearInterval( counter );
+                    dispatch("finished")
+                }
+            }, frameDuration);
+        }
     }
 
     setTimeout(function() {
