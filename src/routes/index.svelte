@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
     import Nav from "../components/Nav.svelte";
     import LayoutGrid, { Cell } from '@smui/layout-grid';
     import { fade } from 'svelte/transition';
