@@ -19,10 +19,13 @@
             let user = url.split("#")[2];
             if (hash == "incorrect") {
                 error = "user does not exist";
+                window.history.pushState({}, document.title, "/" + "login");
             } else if(hash == "exists") {
                 error = "username is already registered";
+                window.history.pushState({}, document.title, "/" + "login");
             } else if(hash == "registered") {
                 success = "successfully registered, now login";
+                window.history.pushState({}, document.title, "/" + "login");
             } else {
                 fetch(`${$server_url}/api/authkey/${hash}/${user}`, {"method": "GET"})
                 .then((response) => response.text())
