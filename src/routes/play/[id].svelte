@@ -1,7 +1,6 @@
 <script lang="ts">
     import Dialog, { Title, Content, Actions } from "@smui/dialog";
-    import { tweened } from 'svelte/motion';
-    import { fade, fly } from 'svelte/transition';
+    import { fade } from 'svelte/transition';
     import Button, { Label } from '@smui/button';
     import Fab, { Icon } from '@smui/fab';
     import { onMount } from 'svelte';
@@ -32,7 +31,7 @@
     let curnode: number = 0;
     let buttonsvisible = true;
     let showamounts = false;
-    let outcome: boolean = null;
+    let outcome = 0; // 0 = nothing, 1 = win, 2 = lose, 3 = restart
     let userchoice = "";
     let score = 0;
     let progress = 0;
@@ -65,10 +64,10 @@
                     nodelist = [...nodelist, newitem]
                 }
 
-                leftitem = nodelist[0];
-                rightitem = nodelist[1];
-                curnode = 2;
+                curnode = 3;
                 infodialog = true;
+
+                // console.log(nodelist.slice(0, 10));
             } else {
                 mandatorydialog = true;
                 buttonsvisible = false;
@@ -86,9 +85,9 @@
 
     function finishedcount() {
         if (userchoice == "higher") {
-            outcome = rightitem.amount >= leftitem.amount;
+            outcome = nodelist[curnode].amount >= nodelist[curnode - 1].amount ? 1 : 2;
         } else {
-            outcome = rightitem.amount <= leftitem.amount;
+            outcome = nodelist[curnode].amount <= nodelist[curnode - 1].amount ? 1 : 2;
         }
         if (outcome) {
             score = score + 1;
@@ -97,15 +96,19 @@
         if (outcome) {
             setTimeout(function() {
                 // showamounts = false;
-                outcome = null;
 
                 function increment() {
                     setTimeout(function() {
-                        if (progress != 100) {
-                            progress = progress + 1;
-                            increment();
+                        if (outcome == 1 || outcome == 0) {
+                            outcome = 0;
+                            if (progress != 100) {
+                                progress = progress + 1;
+                                increment();
+                            } else {
+                                    quickswitch();
+                            }
                         } else {
-                            quickswitch();
+                            outcome = 3;
                         }
                     }, 10);
                 }
@@ -117,18 +120,30 @@
     }
 
     function quickswitch() {
-        leftitem.amount = nodelist[curnode - 1].amount;
-        leftitem.name = nodelist[curnode - 1].name;
-        leftitem.id = nodelist[curnode - 1].id;
-        rightitem.amount = nodelist[curnode].amount;
-        rightitem.name = nodelist[curnode].name;
-        rightitem.id = nodelist[curnode].id;
         curnode++;
-
         colors = [colors[1], colors[0]]
         progress = 0
         showamounts = false;
         buttonsvisible = true;
+    }
+
+    function restart() {
+        if (outcome == 3) {
+            nodelist = [gamenodes[(Math.random() * gamenodes.length) | 0]];
+            let newitem = gamenodes[(Math.random() * gamenodes.length) | 0];
+            for (var i = 0; i < 1000; i++) {
+                while (newitem.id == nodelist[nodelist.length - 1].id) {
+                    newitem = gamenodes[(Math.random() * gamenodes.length) | 0];
+                }
+                nodelist = [...nodelist, newitem]
+            }
+
+            score = 0;
+            curnode = 3;
+            buttonsvisible = true;
+            showamounts = false;
+            outcome = 0;
+        }
     }
 </script>
 <Dialog
@@ -150,15 +165,15 @@
 <title>HiLo</title>
 <main style="background-color: {colors[0]}">
     <div id="left" style="background-color: {colors[0]}">
-        <h1>{leftitem == null ? "" : leftitem.name}</h1>
-        {#if leftitem != null}
+        <h1>{nodelist == null ? "" : nodelist[curnode - 1].name}</h1>
+        {#if nodelist != null}
         <div class="amounts" transition:fade>
-            <CountUp bind:num={leftitem.amount} inc={false}/>
+            <CountUp bind:num={nodelist[curnode - 1].amount} inc={false}/>
         </div>
         {/if}
     </div>
     <div id="right" style="transform: translateX(-{progress}%); background-color: {colors[1]};">
-        <h1>{rightitem == null ? "" : rightitem.name}</h1>
+        <h1>{nodelist == null ? "" : nodelist[curnode].name}</h1>
         {#if buttonsvisible}
         <div id="buttons" style="display: grid;" transition:fade>
             <Button variant="raised" style="background-color: green; margin-bottom: 10px" on:click={() => {decisionpressed("higher")}}>
@@ -173,15 +188,15 @@
         {/if}
         {#if showamounts}
         <div class="amounts" in:fade>
-            <CountUp on:finished={finishedcount} target={rightitem.amount} />
+            <CountUp on:finished={finishedcount} target={nodelist[curnode].amount} />
         </div>
         {/if}
     </div>
     <div id="outcome">
-        {#if outcome != null}
+        {#if outcome != 0}
         <div transition:fade>
-            <Fab style="background-color: {outcome ? "green" : "red"}">
-                <Icon class="material-icons">{outcome ? "check" : "close"}</Icon>
+            <Fab style="background-color: {outcome == 1 ? "green" : outcome == 2 ? "red" : "orange"}" on:click={restart}>
+                <Icon class="material-icons">{outcome == 1 ? "check" : outcome == 2 ? "close" : "loop"}</Icon>
             </Fab>
         </div>
         {/if}

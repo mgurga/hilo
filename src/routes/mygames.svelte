@@ -43,6 +43,7 @@
     }
 </script>
 
+<title>My Games</title>
 <Nav />
 <main>
     <div id="menu">
