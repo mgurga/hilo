@@ -66,6 +66,7 @@
     }
 
     .gamecell {
+        width: 300px;
         height: 200px;
         display: flex;
         justify-content: center;

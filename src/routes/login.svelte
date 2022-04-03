@@ -5,6 +5,7 @@
     import { username, key, server_url } from '../stores.js';
     import { onMount } from 'svelte';
     import Button from '@smui/button';
+    import { fade } from 'svelte/transition';
 
     // console.log("server url: " + $server_url);
 
@@ -56,7 +57,11 @@
         </TabBar>
 
         <form action="{$server_url}/api/{active == "Login" ? "signin" : "register"}">
-            <!-- <h2 style="width: auto; text-align: center;">{active == "Login" ? "Login" : "Register"}</h2> -->
+            {#if active == "Register"}
+            <br>
+            <p transition:fade style="width: auto; text-align: center; color: grey;">Passwords are not stored very securly.</p>
+            <p transition:fade style="width: auto; text-align: center; color: grey;">Do NOT use a password you use on other sites.</p>
+            {/if}
             <br>
             <p>Username</p>
             <input type="text" name="user">
