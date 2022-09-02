@@ -45,7 +45,7 @@
         .then((data) => {
             if (data.error == "invalid game") {
                 alert("invalid game");
-                window.location.href = "/";
+                window.location.href = import.meta.env.VITE_WEBSITE_BASE_URL + "/";
             }
             gameinfo = data;
         })

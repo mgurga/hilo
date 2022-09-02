@@ -67,7 +67,7 @@
                 </div>
                 <div style="display: block;">
                     <Button style="float: right;" on:click={() => {deleteGame(g.id, i)}}>Delete</Button>
-                    <Button style="float: right;" on:click={() => {window.location.href = `/editor/${g.id}`}}>Edit</Button>
+                    <Button style="float: right;" on:click={() => {window.location.href = import.meta.env.VITE_WEBSITE_BASE_URL + `/editor/${g.id}`}}>Edit</Button>
                 </div>
             </div>
             {/each}

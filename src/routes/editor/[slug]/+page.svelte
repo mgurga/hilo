@@ -76,7 +76,7 @@
     function verifylogin() {
         if ($username == "" || $key == "") {
             alert("you are not signed in");
-            window.location.href = "/login";
+            window.location.href = import.meta.env.VITE_WEBSITE_BASE_URL + "/login";
         }
     }
 

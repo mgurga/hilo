@@ -7,7 +7,7 @@
     function logout() {
         $username = "";
         $key = "";
-        window.location.href = "/login"
+        window.location.href = import.meta.env.VITE_WEBSITE_BASE_URL + "/login"
     }
 </script>
 
@@ -27,14 +27,14 @@
       color='primary'>
       <Row>
         <Section>
-          <Title on:click={() => {window.location.href = "/"}} style="cursor: pointer; user-select: none;">HiLo</Title>
+          <Title on:click={() => {window.location.href = import.meta.env.VITE_WEBSITE_BASE_URL + "/"}} style="cursor: pointer; user-select: none;">HiLo</Title>
         </Section>
         <Section align="end" toolbar>
             {#if $key != ""}
-            <Button on:click={() => {window.location.href = "/mygames"}}>My Games</Button>
+            <Button on:click={() => {window.location.href = import.meta.env.VITE_WEBSITE_BASE_URL + "/mygames"}}>My Games</Button>
             <IconButton on:click={logout} class="material-icons" aria-label="Logout">logout</IconButton>
             {:else}
-            <Button on:click={() => {window.location.href = "/login"}}>Login</Button>
+            <Button on:click={() => {window.location.href = import.meta.env.VITE_WEBSITE_BASE_URL + "/login"}}>Login</Button>
             {/if}
         </Section>
       </Row>
