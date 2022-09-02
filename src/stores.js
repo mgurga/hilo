@@ -1,9 +1,11 @@
 import { writable } from 'svelte/store';
-import { browser } from "$app/env";
+import { browser } from "$app/environment";
 
 let isProduction = import.meta.env.MODE === 'production';
-console.log(import.meta.env.MODE);
-export const server_url = isProduction ? writable("https://hiloserver.pythonanywhere.com") : writable("http://localhost:5000");
+if (isProduction) {
+    console.log(import.meta.env.MODE);
+}
+export const server_url = writable(import.meta.env.VITE_SERVER_URL);
 
 export let username = writable("");
 export let key = writable("");

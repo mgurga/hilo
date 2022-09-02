@@ -4,9 +4,11 @@
     import Button, { Label } from '@smui/button';
     import Fab, { Icon } from '@smui/fab';
     import { onMount } from 'svelte';
-    import { server_url } from '../../stores.js';
-    import { page } from '$app/stores';
+    import { server_url } from '../../../stores.js';
     import CountUp from './CountUp.svelte';
+    import { page } from '$app/stores';
+
+    export let gameid = $page.params.slug;
 
     type Game = {
         creator: string;
@@ -25,8 +27,6 @@
 
     let gameinfo: Game = null;
     let gamenodes: Array<GameNode> = [];
-    let leftitem: GameNode = null;
-    let rightitem: GameNode  = null;
     let nodelist: Array<GameNode>;
     let curnode: number = 0;
     let buttonsvisible = true;
@@ -40,7 +40,7 @@
     let infodialog = false;
 
     onMount(() => {
-        fetch(`${$server_url}/api/game/${$page.params.id}/info`, {"method": "GET"})
+        fetch(`${$server_url}/api/game/${gameid}/info`, {"method": "GET"})
         .then((response) => response.json())
         .then((data) => {
             if (data.error == "invalid game") {
@@ -49,7 +49,7 @@
             }
             gameinfo = data;
         })
-        fetch(`${$server_url}/api/game/${$page.params.id}/nodes`, {"method": "GET"})
+        fetch(`${$server_url}/api/game/${gameid}/nodes`, {"method": "GET"})
         .then((response) => response.json())
         .then((data) => {
             gamenodes = data;

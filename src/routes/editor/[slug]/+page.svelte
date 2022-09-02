@@ -1,7 +1,6 @@
 <script lang="ts">
-    import { username, key, server_url } from '../../stores.js';
-    import Nav from "../../components/Nav.svelte";
-    import { page } from '$app/stores';
+    import { username, key, server_url } from '../../../stores.js';
+    import Nav from "../../../components/Nav.svelte";
     import { onMount } from 'svelte';
     import Dialog, { Title, Actions } from "@smui/dialog";
     import Button, { Label } from '@smui/button';
@@ -12,7 +11,9 @@
     import Fab, { Icon } from '@smui/fab';
     import { Section } from '@smui/top-app-bar';
     import Tooltip, { Wrapper } from '@smui/tooltip';
-    // console.log("editing: " + $page.params.id)
+    import { page } from '$app/stores';
+
+    let gameid = $page.params.slug;
 
     type Game = {
         creator: string;
@@ -41,12 +42,13 @@
 
     onMount(() => {
         verifylogin();
-        fetch(`${$server_url}/api/game/${$page.params.id}/info`, {"method": "GET"})
+        console.log("gameid: " + gameid);
+        fetch(`${$server_url}/api/game/${gameid}/info`, {"method": "GET"})
         .then((response) => response.json())
         .then((data) => {
             gameinfo = data;
         })
-        fetch(`${$server_url}/api/game/${$page.params.id}/nodes`, {"method": "GET"})
+        fetch(`${$server_url}/api/game/${gameid}/nodes`, {"method": "GET"})
         .then((response) => response.json())
         .then((data) => {
             gamenodes = data;
@@ -64,7 +66,7 @@
         open = false;
         verifylogin();
         fetch(`${$server_url}/api/games/info`, 
-            {"method": "POST", "headers": {"authkey": $key, "id": $page.params.id, "name": newName, "desc": newDesc}})
+            {"method": "POST", "headers": {"authkey": $key, "id": gameid, "name": newName, "desc": newDesc}})
             .then(() => {
                 gameinfo.name = newName;
                 gameinfo.description = newDesc;
@@ -89,7 +91,7 @@
         let newgn: GameNode = {
             name: newName,
             amount: newAmount,
-            parent: $page.params.id,
+            parent: gameid,
             id: ""
         };
         fetch(`${$server_url}/api/nodes/create`, 
@@ -149,7 +151,7 @@
             
             <div style="grid-column-start: 2; grid-row-start: 1; text-align:right">
                 <Wrapper>
-                    <Fab color="primary" href="/play/{$page.params.id}">
+                    <Fab color="primary" href="/play/{gameid}">
                         <Icon class="material-icons">play_arrow</Icon>
                     </Fab>
                     <Tooltip>Play</Tooltip>

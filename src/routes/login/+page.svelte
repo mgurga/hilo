@@ -1,13 +1,11 @@
 <script lang="ts">
     import Tab, { Label } from '@smui/tab';
     import TabBar from '@smui/tab-bar';
-    import Nav from "../components/Nav.svelte";
-    import { username, key, server_url } from '../stores.js';
+    import Nav from "../../components/Nav.svelte";
+    import { username, key, server_url } from '../../stores.js';
     import { onMount } from 'svelte';
     import Button from '@smui/button';
     import { fade } from 'svelte/transition';
-
-    // console.log("server url: " + $server_url);
 
     let error = "";
     let success = "";

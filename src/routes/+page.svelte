@@ -33,7 +33,7 @@
             <p>Play and Create you own higher or lower games</p>
         </div>
 
-        {#if recents != null}
+        {#if recents !== null && recents.length > 0}
         <div id="recentgames" transition:fade>
             <h1 style="margin-top: 20%; margin-bottom: 0;">Recent Games:</h1>
             <LayoutGrid>

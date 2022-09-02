@@ -2,8 +2,8 @@
     import Button from '@smui/button';
     import CircularProgress from '@smui/circular-progress';
     import Fab, { Icon } from '@smui/fab';
-    import { username, key, server_url } from '../stores.js';
-    import Nav from "../components/Nav.svelte";
+    import { username, key, server_url } from '../../stores.js';
+    import Nav from "../../components/Nav.svelte";
     import { onMount } from 'svelte';
 
     type Game = {
