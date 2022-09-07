@@ -12,6 +12,7 @@
     import { Section } from '@smui/top-app-bar';
     import Tooltip, { Wrapper } from '@smui/tooltip';
     import { page } from '$app/stores';
+    import { base } from '$app/paths';
 
     let gameid = $page.params.slug;
 
@@ -76,7 +77,7 @@
     function verifylogin() {
         if ($username == "" || $key == "") {
             alert("you are not signed in");
-            window.location.href = import.meta.env.VITE_WEBSITE_BASE_URL + "/login";
+            window.location.pathname = `${base}/login`;
         }
     }
 

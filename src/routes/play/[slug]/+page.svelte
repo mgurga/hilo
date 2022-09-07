@@ -7,6 +7,7 @@
     import { server_url } from '../../../stores.js';
     import CountUp from './CountUp.svelte';
     import { page } from '$app/stores';
+    import { base } from "$app/paths";
 
     export let gameid = $page.params.slug;
 
@@ -45,7 +46,7 @@
         .then((data) => {
             if (data.error == "invalid game") {
                 alert("invalid game");
-                window.location.href = import.meta.env.VITE_WEBSITE_BASE_URL + "/";
+                window.location.pathname = base;
             }
             gameinfo = data;
         })

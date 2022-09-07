@@ -12,8 +12,11 @@ const config = {
 	}),
 
 	kit: {
-		adapter: adapter()
-	}
+		adapter: adapter(),
+		paths: {
+			base: "/hilo"
+		}
+	},
 };
 
 export default config;

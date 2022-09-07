@@ -2,9 +2,6 @@ import { writable } from 'svelte/store';
 import { browser } from "$app/environment";
 
 let isProduction = import.meta.env.MODE === 'production';
-if (isProduction) {
-    console.log(import.meta.env.MODE);
-}
 export const server_url = writable(import.meta.env.VITE_SERVER_URL);
 
 export let username = writable("");

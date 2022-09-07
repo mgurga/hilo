@@ -5,6 +5,7 @@
     import { username, key, server_url } from '../../stores.js';
     import Nav from "../../components/Nav.svelte";
     import { onMount } from 'svelte';
+    import { base } from '$app/paths';
 
     type Game = {
         creator: string;
@@ -19,7 +20,7 @@
     onMount(() => {
         if ($username == "" || $key == "") {
             alert("you are not signed in");
-            window.location.href = "/login";
+            window.location.pathname = `${base}/login`;
         }
 
         fetch(`${$server_url}/api/${$username}/games`, {"method": "GET"})
@@ -67,7 +68,7 @@
                 </div>
                 <div style="display: block;">
                     <Button style="float: right;" on:click={() => {deleteGame(g.id, i)}}>Delete</Button>
-                    <Button style="float: right;" on:click={() => {window.location.href = import.meta.env.VITE_WEBSITE_BASE_URL + `/editor/${g.id}`}}>Edit</Button>
+                    <Button style="float: right;" on:click={() => {window.location.pathname = `${base}/editor/${g.id}`}}>Edit</Button>
                 </div>
             </div>
             {/each}

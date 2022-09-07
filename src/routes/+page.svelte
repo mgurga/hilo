@@ -39,7 +39,7 @@
             <LayoutGrid>
             {#each recents as game}
                 <Cell>
-                    <div class="gamecell" on:click={() => {window.location.href = import.meta.env.VITE_WEBSITE_BASE_URL + `/play/${game.id}`}}>
+                    <div class="gamecell" on:click={() => {window.location.pathname = `${base}/play/${game.id}`}}>
                         <h1 style="margin-bottom: 0; margin-top: 0;">{game.name}</h1>
                         <h3 style="color: grey; margin-bottom: 0;">{game.description}</h3>
                         <p style="color: grey; margin-bottom: 0;">created by: {game.creator}</p>

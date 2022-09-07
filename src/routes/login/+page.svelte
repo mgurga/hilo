@@ -6,25 +6,26 @@
     import { onMount } from 'svelte';
     import Button from '@smui/button';
     import { fade } from 'svelte/transition';
+    import { base } from '$app/paths';
 
     let error = "";
     let success = "";
     let active = "Login";
 
     onMount(() => {
-        const url = window.location.href
+        const url = window.location.hash;
         if (url.includes("#")) {
             let hash = url.split("#")[1];
             let user = url.split("#")[2];
             if (hash == "incorrect") {
                 error = "user does not exist";
-                window.history.pushState({}, document.title, "/" + "login");
+                window.history.pushState({}, document.title, `${base}/login`);
             } else if(hash == "exists") {
                 error = "username is already registered";
-                window.history.pushState({}, document.title, "/" + "login");
+                window.history.pushState({}, document.title, `${base}/login`);
             } else if(hash == "registered") {
                 success = "successfully registered, now login";
-                window.history.pushState({}, document.title, "/" + "login");
+                window.history.pushState({}, document.title, `${base}/login`);
             } else {
                 fetch(`${$server_url}/api/authkey/${hash}/${user}`, {"method": "GET"})
                 .then((response) => response.text())
@@ -34,7 +35,7 @@
                         $username = user;
                         success = "successfully logged in";
                         // console.log(data);
-                        window.history.pushState({}, document.title, "/" + "login");
+                        window.history.pushState({}, document.title, `${base}/login`);
                     }
                     if (data == "invalid hash")
                         alert("invalid hash, try signing in again")

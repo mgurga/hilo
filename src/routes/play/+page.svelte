@@ -1,6 +1,7 @@
 <script>
     import { onMount } from 'svelte';
+    import { base } from '$app/paths';
     onMount(() => {
-        window.location.href = import.meta.env.VITE_WEBSITE_BASE_URL + "/";
+        window.location.pathname = base;
     })
 </script>
