@@ -4,7 +4,8 @@
     import { fade } from 'svelte/transition';
     import { onMount } from 'svelte';
     import { server_url } from '../stores.js';
-
+    import { base } from '$app/paths';
+    
     type Game = {
         creator: string;
         id: string;
