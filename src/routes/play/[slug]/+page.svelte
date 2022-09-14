@@ -90,40 +90,39 @@
         } else {
             outcome = nodelist[curnode].amount <= nodelist[curnode - 1].amount ? 1 : 2;
         }
-        if (outcome) {
-            score = score + 1;
+
+        if (outcome == 1) {
+            score++;
         }
+        
+        setTimeout(function() {
+            // showamounts = false;
 
-        if (outcome) {
-            setTimeout(function() {
-                // showamounts = false;
-
-                function increment() {
-                    setTimeout(function() {
-                        if (outcome == 1 || outcome == 0) {
-                            outcome = 0;
-                            if (progress != 100) {
-                                progress = progress + 1;
-                                increment();
-                            } else {
-                                    quickswitch();
-                            }
+            function increment() {
+                setTimeout(function() {
+                    if (outcome == 1 || outcome == 0) {
+                        outcome = 0;
+                        if (progress != 100) {
+                            progress = progress + 1;
+                            increment();
                         } else {
-                            outcome = 3;
+                            quickswitch();
                         }
-                    }, 10);
-                }
+                    } else {
+                        outcome = 3;
+                    }
+                }, 10);
+            }
 
-                increment();
-            }, 3000)
-        }
+            increment();
+        }, 3000);
         // console.log(`${leftitem.amount} vs ${rightitem.amount} done counting, you ${outcome ? "WIN" : "LOSE"}`);
     }
 
     function quickswitch() {
         curnode++;
-        colors = [colors[1], colors[0]]
-        progress = 0
+        colors = [colors[1], colors[0]];
+        progress = 0;
         showamounts = false;
         buttonsvisible = true;
     }
@@ -136,7 +135,7 @@
                 while (newitem.id == nodelist[nodelist.length - 1].id) {
                     newitem = gamenodes[(Math.random() * gamenodes.length) | 0];
                 }
-                nodelist = [...nodelist, newitem]
+                nodelist = [...nodelist, newitem];
             }
 
             score = 0;
