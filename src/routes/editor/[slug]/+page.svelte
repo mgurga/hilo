@@ -127,10 +127,6 @@
         gamenodes[editingindex].name = newName;
         gamenodes[editingindex].amount = newAmount;
     }
-
-    function play() {
-
-    }
 </script>
 
 <title>Game Editor</title>
@@ -152,7 +148,7 @@
             
             <div style="grid-column-start: 2; grid-row-start: 1; text-align:right">
                 <Wrapper>
-                    <Fab color="primary" href="/play/{gameid}">
+                    <Fab color="primary" href="{base}/play/{gameid}">
                         <Icon class="material-icons">play_arrow</Icon>
                     </Fab>
                     <Tooltip>Play</Tooltip>
